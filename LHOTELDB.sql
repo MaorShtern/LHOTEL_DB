@@ -10,7 +10,6 @@ GO
 
 
 create table Employees_Types
-
 (
 	Worker_Code int NOT NULL,
 	Description NVARCHAR(30)
@@ -21,7 +20,6 @@ go
 
 
 create table Tasks_Types
-
 (
 	Task_Number int NOT NULL,
 	Task_Name NVARCHAR(30) NOT NULL,
@@ -29,8 +27,8 @@ create table Tasks_Types
 )
 go
 
-create table Customers_Types
 
+create table Customers_Types
 (
 	Customers_Type int NOT NULL,
 	Description NVARCHAR(30),
@@ -40,6 +38,7 @@ create table Customers_Types
 )
 go
 
+
 create table Rooms
 (
 	Room_Number int identity(1,1),
@@ -48,7 +47,6 @@ create table Rooms
 	CONSTRAINT [PK_Room_Number] PRIMARY KEY (Room_Number)
 )
 go
-
 
 
 
@@ -107,7 +105,6 @@ create table Employees_Tasks
           (Task_Number) REFERENCES Tasks_Types (Task_Number)
 )
 go
-
 
 
 
