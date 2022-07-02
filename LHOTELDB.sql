@@ -63,9 +63,7 @@ create table Products
 go
 
 
-
 create table Bill_Details
-
 (
 	Bill_Number int NOT NULL,
 	Product_Code int NOT NULL,
@@ -147,14 +145,13 @@ create table Customers_Rooms
 go
 
 
-
 create table Bill
 (
 	Bill_Number int NOT NULL,
 	Employee_ID int NOT NULL,
 	Customer_ID int NOT NULL,
 	Room_Number int NOT NULL,
-	Credit_Card_Number int NOT NULL,
+	Credit_Card_Number nvarchar(12) NOT NULL,
 	Purchase_Date Date NOT NULL,
 	Bill_Status nvarchar(30) NOT NULL,
 	CONSTRAINT [PK_Bill_Number1] PRIMARY KEY (Bill_Number),
@@ -538,6 +535,128 @@ as
 go
 
 -- exec AlterCustomerRoom 111,2,'2022-09-08','2022-09-14',1,1
+
+--  מביא את החדרים שתאריך היציאה שלהם גדול מהתאריך של היום
+--  מצביא על חדרים תפוסים
+create proc GetTakenRooms
+as
+	select * from [dbo].[Customers_Rooms]
+	where Exit_Date >= GETDATE() order by [Entry_Date] DESC
+go
+-- exec GetTakenRooms
+
+
+
+--  מביא את החדרים שכבר עשו צאק אווט או צריכים לעשות
+-- drop proc GetAvailableRoomsByCurrentDate
+--create proc GetAvailableRoomsByCurrentDate
+--as
+--	SELECT dbo.Rooms.Room_Number, dbo.Rooms.Room_Type, dbo.Rooms.Price_Per_Night, dbo.Customers_Rooms.Entry_Date, dbo.Customers_Rooms.Exit_Date
+--	FROM dbo.Customers_Rooms INNER JOIN dbo.Rooms 
+--	ON dbo.Customers_Rooms.Room_Number = dbo.Rooms.Room_Number
+--	WHERE  (dbo.Customers_Rooms.Exit_Date < GETDATE())
+--	GROUP BY dbo.Rooms.Room_Number, dbo.Rooms.Room_Type, dbo.Rooms.Price_Per_Night, dbo.Customers_Rooms.Entry_Date, dbo.Customers_Rooms.Exit_Date
+--go
+--  exec GetAvailableRoomsByCurrentDate
+
+
+--  תביא לי את כול החדרים הפנויים
+--  חדר פנוי  -->  חדר שתאריך היציאה שלו עבר כבר, חדר שלא מופיע ברשימה
+create proc AvailableRooms
+as
+	SELECT t1.Room_Number,Room_Type, Price_Per_Night  
+	FROM dbo.Rooms t1 LEFT JOIN  dbo.Customers_Rooms t2 
+	ON t2.Room_Number = t1.Room_Number
+	WHERE t2.Room_Number IS NULL or t2.Exit_Date < GETDATE()
+go
+
+-- exec AvailableRooms
+
+
+create proc GetAllBill_Details
+as
+	select * from [dbo].[Bill_Details]
+go
+-- exec GetAllBill_Details
+
+
+create proc GetAllBill_DetailsByNumber
+@Bill_Number int
+as
+	select * from [dbo].[Bill_Details]
+	where Bill_Number = @Bill_Number
+go
+-- exec GetAllBill_DetailsByNumber 1
+
+
+-------------------------------------------
+--  אי אפשר שלקוח יזמין יותר ממוצר אחד 
+--  המפתח של "מספר החשבון לא מאפשר כפיליות 
+--  יש צורך לשנות את שתי הטבלאות "חשבון" ן-"פרטי חשבון" י
+--------------------------------------------
+create proc AddNewBill_Detail
+@Bill_Number int,
+@Product_Code int,
+@Amount int
+as
+	insert [dbo].[Bill_Details]
+	values (@Bill_Number, @Product_Code, @Amount)
+go
+-- exec AddNewBill_Detail 1,2,6
+
+
+create proc DeletBill_Detail
+@Bill_Number int,
+@Product_Code int,
+@Amount int
+as
+	DELETE FROM [dbo].[Bill_Details] 
+	WHERE Bill_Number = @Bill_Number and Product_Code = @Product_Code and @Amount = @Amount
+go
+-- exec DeletBill_Detail 1,1,100
+
+
+create proc AlterBill_Detail
+@Bill_Number int,
+@Product_Code int,
+@Amount int
+as
+	UPDATE [dbo].[Bill_Details]
+	SET Bill_Number = @Bill_Number , Product_Code = @Product_Code, Amount = @Amount
+	WHERE Bill_Number = @Bill_Number and Product_Code = @Product_Code
+go
+-- exec AlterBill_Detail 1,1,100
+
+
+
+create proc GetAllBilles
+as
+	select * from [dbo].[Bill]
+go
+--exec GetAllBilles
+
+
+--create proc AddNewBill
+--@Employee_ID int,
+--@Customer_ID int,
+--@Room_Number int,
+--@Credit_Card_Number nvarchar(12),
+--@Purchase_Date date,
+--@Bill_Status nvarchar(30)
+--as
+--	declare @Bill_Number as int
+--	select @Bill_Number = COUNT(*) FROM Employees;
+--	insert [dbo].[Bill] 
+--	values(@Bill_Number,@Employee_ID, @Customer_ID,@Room_Number,@Credit_Card_Number,@Purchase_Date,@Bill_Status)
+--go
+
+--exec AddNewBill 111,111,1,'4580266514789456','01/01/2021','Open'
+
+--exec GetAllCustomers
+--exec GetAllEmployees
+--SELECT COUNT(*) FROM Employees;
+
+--select * from [dbo].[Bill]
 
 
 
