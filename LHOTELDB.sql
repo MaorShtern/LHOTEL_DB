@@ -158,6 +158,8 @@ create table Bill_Details
 	Bill_Number int NOT NULL,
 	Product_Code int NOT NULL,
 	Amount int NOT NULL,
+	Purchase_Date date,
+	Purchase_Time time,
 	CONSTRAINT [Fk_Product_Code] FOREIGN KEY 
           (Product_Code) REFERENCES Products (Product_Code),
 	CONSTRAINT [Fk_Bill_Number] FOREIGN KEY 
@@ -622,7 +624,7 @@ go
 -- exec GetAllBill_Details
 
 
-create proc GetAllBill_DetailsByNumber
+create proc GetBill_DetailsByNumber
 @Bill_Number int
 as
 	select * from [dbo].[Bill_Details]
@@ -635,48 +637,45 @@ go
 create proc AddNewBill_Detail
 @Bill_Number int,
 @Product_Code int,
-@Amount int
+@Amount int,
+@Purchase_Date date,
+@Purchase_Time time
 as
 	insert [dbo].[Bill_Details]
-	values (@Bill_Number, @Product_Code, @Amount)
+	values (@Bill_Number, @Product_Code, @Amount,@Purchase_Date,@Purchase_Time)
 go
--- exec AddNewBill_Detail 2,2,6
+-- exec AddNewBill_Detail 2,2,6,'12/12/2022','13:00'
+
 
 
 create proc DeletBill_Detail
-@Bill_Number int,
 @Product_Code int,
-@Amount int
+@Amount int,
+@Purchase_Date date,
+@Purchase_Time time
 as
 	DELETE FROM [dbo].[Bill_Details] 
-	WHERE Bill_Number = @Bill_Number and Product_Code = @Product_Code and @Amount = @Amount
+	WHERE Product_Code = @Product_Code and @Amount = @Amount 
+	and Purchase_Date = @Purchase_Date and Purchase_Time = @Purchase_Time
 go
--- exec DeletBill_Detail 2,2,6
+
+-- exec DeletBill_Detail 2,6,'01/01/2021','13:00'
+
 
 
 create proc AlterBill_Detail
 @Bill_Number int,
 @Product_Code int,
-@Amount int
+@Amount int,
+@Purchase_Date date,
+@Purchase_Time time
 as
 	UPDATE [dbo].[Bill_Details]
-	SET Bill_Number = @Bill_Number , Product_Code = @Product_Code, Amount = @Amount
+	SET Bill_Number = @Bill_Number , Product_Code = @Product_Code, 
+	Amount = @Amount , Purchase_Date = @Purchase_Date , Purchase_Time = @Purchase_Time
 	WHERE Bill_Number = @Bill_Number and Product_Code = @Product_Code
 go
--- exec AlterBill_Detail 2,3,6
-
-
-
-create proc GetAllBilles
-as
-	select * from [dbo].[Bill]
-go
---exec GetAllBilles
-
-
-
-
-
+-- exec AlterBill_Detail 2,3,6, '12/12/2022','13:00'
 
 
 
