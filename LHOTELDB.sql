@@ -61,16 +61,7 @@ create table Products
 go
 
 
-create table Bill_Details
-(
-	Bill_Number int NOT NULL,
-	Product_Code int NOT NULL,
-	Amount int NOT NULL,
-	CONSTRAINT [PK_Bill_Number] PRIMARY KEY (Bill_Number),
-	CONSTRAINT [Fk_Product_Code] FOREIGN KEY 
-          (Product_Code) REFERENCES Products (Product_Code)
-)
-go
+
 
 
 
@@ -88,6 +79,7 @@ create table Employees
   (Worker_Code) REFERENCES Employees_Types (Worker_Code)
 )
 go
+
 
 create table Employees_Tasks
 (
@@ -142,9 +134,10 @@ create table Customers_Rooms
 go
 
 
+
 create table Bill
 (
-	Bill_Number int NOT NULL,
+	Bill_Number int identity(1,1) NOT NULL,
 	Employee_ID int NOT NULL,
 	Customer_ID int NOT NULL,
 	Room_Number int NOT NULL,
@@ -152,7 +145,6 @@ create table Bill
 	Purchase_Date Date NOT NULL,
 	Bill_Status nvarchar(30) NOT NULL,
 	CONSTRAINT [PK_Bill_Number1] PRIMARY KEY (Bill_Number),
-	CONSTRAINT [Fk_Bill_Number] FOREIGN KEY (Bill_Number) REFERENCES [dbo].[Bill_Details]([Bill_Number]) ,
 	CONSTRAINT [Fk_Employee_ID2] FOREIGN KEY (Employee_ID) REFERENCES Employees (Employee_ID),
 	CONSTRAINT [Fk_Customer_ID] FOREIGN KEY (Customer_ID) REFERENCES Customers (Customer_ID),
 	CONSTRAINT [Fk_Room_Number1] FOREIGN KEY (Room_Number) REFERENCES [dbo].[Rooms] ([Room_Number])
@@ -160,38 +152,18 @@ create table Bill
 go
 
 
-select * from [dbo].[Employees_Types]
-insert [dbo].[Employees_Types] values(1,'Management')
-insert [dbo].[Employees_Types] values(2,'Receptionist')
-insert [dbo].[Employees_Types] values(3,'Room service worker')
-select * from [dbo].[Tasks_Types]
-insert [dbo].[Tasks_Types] values(1,'Room cleaning')
-insert [dbo].[Tasks_Types] values(2,'Mini bar filling')
-select * from [dbo].[Customers_Types]
-insert [dbo].[Customers_Types] values(1,'Common')
-insert [dbo].[Customers_Types] values(2,'Regular')
-insert [dbo].[Customers_Types] values(3,'VIP')
 
-
-
---select
---    'data source=' + @@servername +
---    ';initial catalog=' + db_name() +
---    case type_desc
---        when 'WINDOWS_LOGIN' 
---            then ';trusted_connection=true'
---        else
---            ';user id=' + suser_name()
---    end
---from sys.server_principals
---where name = suser_name()
-
---declare @FromDate date = '12-06-2001'
---declare @ToDate date = '12-06-2022'
-
---select FORMAT(dateadd(day, 
---               rand(checksum(newid()))*(1+datediff(day, @FromDate, @ToDate)), 
---               @FromDate),'dd/MM/yyyy')
+create table Bill_Details
+(
+	Bill_Number int NOT NULL,
+	Product_Code int NOT NULL,
+	Amount int NOT NULL,
+	CONSTRAINT [Fk_Product_Code] FOREIGN KEY 
+          (Product_Code) REFERENCES Products (Product_Code),
+	CONSTRAINT [Fk_Bill_Number] FOREIGN KEY 
+          (Bill_Number) REFERENCES Bill (Bill_Number),
+)
+go
 
 
 
@@ -202,7 +174,7 @@ as
 go
 --exec GetAllEmployees
 
-exec 
+
 
 create proc GetEmployeeById
 @id int
@@ -267,6 +239,7 @@ as
 go
 --exec GetCustomerById 111
 
+
 create proc AddNewCustomer
 @id int,
 @Customer_Type int,
@@ -307,6 +280,7 @@ as
 go
 --exec AlterCustomerById 111,1,'AAA','BBB','CCC','0526211881','AAA','02/02/2025',888
 
+
 create proc DeleteCustomerById
 @id int
 as
@@ -322,12 +296,14 @@ as
 go
 --exec GetAllProducts
 
+
 create proc GetProductById
 @id int
 as
 	select * from dbo.Products where Products.Product_Code = @id
 go
 --exec GetProductById 111
+
 
 create proc AddNewProduct
 @Description nvarchar(30) ,
@@ -337,6 +313,7 @@ as
 	Insert [dbo].[Products] Values (@Description,@Price_Per_Unit,@Discount_Percentage)
 go
 --exec AddNewProduct 'AAA',15,0
+
 
 create proc AlterProductById
 @id int,
@@ -468,6 +445,7 @@ go
 -- exec DeleteTask 111,1,'02/02/2022'
 
 
+--  פרוצדורות חדרים שמורים ללקוחות
 create proc GetCustomersRooms
 as
 	select * from [dbo].[Customers_Rooms] order by [Entry_Date] DESC
@@ -524,7 +502,7 @@ create proc AlterCustomerRoom
 @Bill_Number int
 as
 	UPDATE [dbo].[Customers_Rooms]
-	SET [Room_Number] = 3,
+	SET [Room_Number] = @Room_Number,
 	[Exit_Date]=@Exit_Date, 
 	[Amount_Of_People] = @Amount_Of_People,
 	[Bill_Number] = @Bill_Number
@@ -532,6 +510,7 @@ as
 go
 
 -- exec AlterCustomerRoom 111,2,'2022-09-08','2022-09-14',1,1
+
 
 --  מביא את החדרים שתאריך היציאה שלהם גדול מהתאריך של היום
 --  מצביא על חדרים תפוסים
@@ -570,6 +549,72 @@ go
 -- exec AvailableRooms
 
 
+-- פרוצדורות חשבון ללקוח
+create proc GetAllBill
+as
+	select * from [dbo].[Bill]
+go
+--exec GetAllBill
+
+
+create proc  GetBillByNumber
+@Bill_Number int
+as
+	select * from [dbo].[Bill]
+	where Bill_Number = @Bill_Number
+go
+-- exec GetBillByNumber 1 
+
+
+create proc AddNewBill
+@Employee_ID int,
+@Customer_ID int,
+@Room_Number int,
+@Credit_Card_Number nvarchar(12),
+@Purchase_Date date,
+@Bill_Status nvarchar(30)
+as
+	insert [dbo].[Bill] 
+	values(@Employee_ID, @Customer_ID,@Room_Number,@Credit_Card_Number,@Purchase_Date,@Bill_Status)
+go
+
+-- exec AddNewBill 111,111,1,'4580266514789456','01/01/2021','Open'
+
+
+create proc AlterBill
+@Bill_Number int,
+@Employee_ID int,
+@Customer_ID int,
+@Room_Number int,
+@Credit_Card_Number nvarchar(12),
+@Purchase_Date date,
+@Bill_Status nvarchar(30)
+as
+	UPDATE [dbo].[Bill]
+	SET Employee_ID = @Employee_ID,
+	Customer_ID=@Customer_ID, 
+	Room_Number = @Room_Number,
+	Credit_Card_Number = @Credit_Card_Number,
+	Purchase_Date = @Purchase_Date,
+	Bill_Status = @Bill_Status
+	WHERE Bill_Number = @Bill_Number 
+go
+
+-- exec AlterBill 1,222,111,1,'4580266514789456','02/01/2021','Close'
+
+create proc DeletBill
+@Bill_Number int,
+@Customer_ID int,
+@Room_Number int
+as
+	DELETE FROM [dbo].[Bill] 
+	WHERE Bill_Number = @Bill_Number or (Customer_ID = @Customer_ID and Room_Number = @Room_Number)
+go
+
+-- exec DeletBill 1,222,1
+
+
+--  פרוצדורות פרטי רכישות
 create proc GetAllBill_Details
 as
 	select * from [dbo].[Bill_Details]
@@ -586,11 +631,7 @@ go
 -- exec GetAllBill_DetailsByNumber 1
 
 
--------------------------------------------
---  אי אפשר שלקוח יזמין יותר ממוצר אחד 
---  המפתח של "מספר החשבון לא מאפשר כפיליות 
---  יש צורך לשנות את שתי הטבלאות "חשבון" ן-"פרטי חשבון" י
---------------------------------------------
+
 create proc AddNewBill_Detail
 @Bill_Number int,
 @Product_Code int,
@@ -599,7 +640,7 @@ as
 	insert [dbo].[Bill_Details]
 	values (@Bill_Number, @Product_Code, @Amount)
 go
--- exec AddNewBill_Detail 1,2,6
+-- exec AddNewBill_Detail 2,2,6
 
 
 create proc DeletBill_Detail
@@ -610,7 +651,7 @@ as
 	DELETE FROM [dbo].[Bill_Details] 
 	WHERE Bill_Number = @Bill_Number and Product_Code = @Product_Code and @Amount = @Amount
 go
--- exec DeletBill_Detail 1,1,100
+-- exec DeletBill_Detail 2,2,6
 
 
 create proc AlterBill_Detail
@@ -622,7 +663,7 @@ as
 	SET Bill_Number = @Bill_Number , Product_Code = @Product_Code, Amount = @Amount
 	WHERE Bill_Number = @Bill_Number and Product_Code = @Product_Code
 go
--- exec AlterBill_Detail 1,1,100
+-- exec AlterBill_Detail 2,3,6
 
 
 
@@ -631,29 +672,6 @@ as
 	select * from [dbo].[Bill]
 go
 --exec GetAllBilles
-
-
---create proc AddNewBill
---@Employee_ID int,
---@Customer_ID int,
---@Room_Number int,
---@Credit_Card_Number nvarchar(12),
---@Purchase_Date date,
---@Bill_Status nvarchar(30)
---as
---	declare @Bill_Number as int
---	select @Bill_Number = COUNT(*) FROM Employees;
---	insert [dbo].[Bill] 
---	values(@Bill_Number,@Employee_ID, @Customer_ID,@Room_Number,@Credit_Card_Number,@Purchase_Date,@Bill_Status)
---go
-
---exec AddNewBill 111,111,1,'4580266514789456','01/01/2021','Open'
-
---exec GetAllCustomers
---exec GetAllEmployees
---SELECT COUNT(*) FROM Employees;
-
---select * from [dbo].[Bill]
 
 
 
