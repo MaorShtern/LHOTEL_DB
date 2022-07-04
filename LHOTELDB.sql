@@ -679,8 +679,28 @@ go
 
 
 
+create proc Product_Resit
+@Bill_Number int
+as
+	SELECT dbo.Bill_Details.Bill_Number, dbo.Bill_Details.Product_Code, dbo.Products.Description, dbo.Products.Price_Per_Unit, dbo.Products.Discount_Percentage, dbo.Bill_Details.Amount, dbo.Bill_Details.Purchase_Date, dbo.Bill_Details.Purchase_Time
+	FROM dbo.Bill_Details INNER JOIN dbo.Products 
+	ON dbo.Bill_Details.Product_Code = dbo.Products.Product_Code
+	WHERE  (dbo.Bill_Details.Bill_Number = @Bill_Number)
+	GROUP BY dbo.Bill_Details.Bill_Number, dbo.Bill_Details.Product_Code, dbo.Products.Description, dbo.Products.Price_Per_Unit, dbo.Products.Discount_Percentage, dbo.Bill_Details.Amount, dbo.Bill_Details.Purchase_Date, dbo.Bill_Details.Purchase_Time
+go
+
+-- exec Product_Resit 2
 
 
+-----------------------------------------
+--  צריך לשנות את הטבלאות BILL, ROOM_CUS
+--  אנחנו נירצה ליצור קבלה המראה את פרטי החדר, כמה ימים ישנו שם, וכמה צריך לשלם
+---------------------------------------------
+create proc Room_Resit
+as
+
+
+go
 
 
 
