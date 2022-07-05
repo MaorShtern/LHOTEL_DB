@@ -754,3 +754,16 @@ go
 
 -- exec SumPerProduct
 
+
+create proc Number_of_tasks_per_month
+as
+	SELECT Start_Date, count(Start_Date) FROM Employees_Tasks GROUP by Start_Date
+go
+--exec Number_of_tasks_per_month
+
+
+create proc Month_with_the_most_reservation
+as
+	select MONTH(Entry_Date) as Month  from [dbo].[Customers_Rooms] GROUP by Entry_Date
+go
+exec Month_with_the_most_reservation
