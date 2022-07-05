@@ -49,14 +49,24 @@ create table Rooms
 go
 
 
+create table Category
+(
+	Category_Number int not null,
+	Description NVARCHAR(30)
+	CONSTRAINT [PK_Category_Number] PRIMARY KEY (Category_Number)
+)
+go
+
 
 create table Products
 (
 	Product_Code int identity(1,1),
+	Category_Number int not null,
 	Description NVARCHAR(30),
 	Price_Per_Unit int NOT NULL,
 	Discount_Percentage int NOT NULL,
-	CONSTRAINT [PK_Product_Code] PRIMARY KEY (Product_Code)
+	CONSTRAINT [PK_Product_Code] PRIMARY KEY (Product_Code),
+	CONSTRAINT [Fk_Category_Number] FOREIGN KEY (Category_Number) REFERENCES Category (Category_Number)
 )
 go
 
@@ -153,7 +163,6 @@ go
 
 
 
-<<<<<<< Updated upstream
 create table Bill_Details
 (
 	Bill_Number int NOT NULL,
@@ -167,14 +176,6 @@ create table Bill_Details
           (Bill_Number) REFERENCES Bill (Bill_Number),
 )
 go
-=======
---declare @FromDate date = '12-06-2001'
---declare @ToDate date = '12-06-2022'
-
---select FORMAT(dateadd(day, 
---               rand(checksum(newid()))*(1+datediff(day, @FromDate, @ToDate)), 
---               @FromDate),'dd/MM/yyyy')
->>>>>>> Stashed changes
 
 
 
@@ -300,6 +301,26 @@ go
 --exec DeleteCustomerById 111 
 
 
+-- פרוצדורות קטגוריה
+create proc GetCategory
+as
+	select * from [dbo].[Category]
+go
+exec GetCategory
+
+
+create proc AddNewCategory
+@Category_Number int,
+@Description nvarchar(30)
+as
+	insert [dbo].[Category] values(@Category_Number,@Description)
+go
+--exec AddNewCategory 1,'sweet drink'
+--exec AddNewCategory 2,'Alcohol'
+--exec AddNewCategory 3,'Snacks'
+
+
+
 -- פרוצדורות מוצרים
 create proc GetAllProducts
 as
@@ -316,14 +337,18 @@ go
 --exec GetProductById 111
 
 
-create proc AddNewProduct
+alter proc AddNewProduct
+@Category_Number int,
 @Description nvarchar(30) ,
 @Price_Per_Unit int ,
 @Discount_Percentage int
 as
-	Insert [dbo].[Products] Values (@Description,@Price_Per_Unit,@Discount_Percentage)
+	Insert [dbo].[Products] Values (@Category_Number,@Description,@Price_Per_Unit,@Discount_Percentage)
 go
---exec AddNewProduct 'AAA',15,0
+--exec AddNewProduct 1,'Coca cola',15,0
+--exec AddNewProduct 2,'Vodka',35,0
+--exec AddNewProduct 3,'Doritos',20,0
+--exec AddNewProduct 3,'Doritos',20,50
 
 
 create proc AlterProductById
@@ -338,7 +363,7 @@ as
 	[Discount_Percentage] = @Discount_Percentage
 	WHERE [Product_Code] = @id
 go
--- exec AlterProductById 1,'BBB',15,0
+-- exec AlterProductById 1,'Coca cola',15,50
 
 
 create proc DeleteProductById
@@ -398,18 +423,6 @@ as
 	select*from [dbo].[Employees_Tasks] ORDER BY [Task_Status] DESC
 go
 -- exec GetAllTasks
-
-
-
-SELECT Start_Date, count(Start_Date) 
-  FROM Employees_Tasks 
- GROUP by Start_Date
-
-
-
-
-
-
 
 
 create proc GetTaskById
@@ -666,8 +679,10 @@ as
 	insert [dbo].[Bill_Details]
 	values (@Bill_Number, @Product_Code, @Amount,@Purchase_Date,@Purchase_Time)
 go
--- exec AddNewBill_Detail 2,2,6,'12/12/2022','13:00'
-
+--exec AddNewBill_Detail 2,2,6,'12/12/2022','13:00'
+--exec AddNewBill_Detail 2,3,6,'03/12/2022','16:00'
+--exec AddNewBill_Detail 2,1,6,'12/12/2022','21:00'
+--exec AddNewBill_Detail 2,1,10,'12/12/2022','21:00'
 
 
 create proc DeletBill_Detail
@@ -681,7 +696,7 @@ as
 	and Purchase_Date = @Purchase_Date and Purchase_Time = @Purchase_Time
 go
 
--- exec DeletBill_Detail 2,6,'01/01/2021','13:00'
+-- exec DeletBill_Detail 2,6,'12/12/2022','13:00'
 
 
 
@@ -697,7 +712,7 @@ as
 	Amount = @Amount , Purchase_Date = @Purchase_Date , Purchase_Time = @Purchase_Time
 	WHERE Bill_Number = @Bill_Number and Product_Code = @Product_Code
 go
--- exec AlterBill_Detail 2,3,6, '12/12/2022','13:00'
+-- exec AlterBill_Detail 2,2,6, '12/12/2022','13:00'
 
 
 
@@ -726,4 +741,16 @@ go
 
 
 
+create proc SumPerProduct
+as
+	SELECT dbo.Bill_Details.Product_Code, dbo.Products.Description, dbo.Category.Description AS Category,
+	dbo.Products.Price_Per_Unit, dbo.Products.Discount_Percentage, 
+	(select sum(Amount) from Bill_Details where Product_Code = dbo.Bill_Details.Product_Code) as Amount
+	FROM dbo.Bill_Details INNER JOIN dbo.Products 
+	ON dbo.Bill_Details.Product_Code = dbo.Products.Product_Code INNER JOIN dbo.Category 
+	ON dbo.Products.Category_Number = dbo.Category.Category_Number
+	GROUP BY dbo.Bill_Details.Product_Code, dbo.Products.Description, dbo.Category.Description, dbo.Products.Price_Per_Unit, dbo.Products.Discount_Percentage
+go
+
+-- exec SumPerProduct
 
