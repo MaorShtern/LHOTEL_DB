@@ -101,10 +101,8 @@ create table Employees_Tasks
 	Task_Status nvarchar(30),
 	Description NVARCHAR(30),
 	CONSTRAINT [PK_Employee_ID2] PRIMARY KEY (Employee_ID,Task_Number,Start_Date,Start_Time),
-	CONSTRAINT [Fk_Employee_ID] FOREIGN KEY 
-          (Employee_ID) REFERENCES Employees (Employee_ID),
-		  	CONSTRAINT [Fk_Task_Number] FOREIGN KEY 
-          (Task_Number) REFERENCES Tasks_Types (Task_Number)
+	CONSTRAINT [Fk_Employee_ID] FOREIGN KEY (Employee_ID) REFERENCES Employees (Employee_ID),
+	CONSTRAINT [Fk_Task_Number] FOREIGN KEY (Task_Number) REFERENCES Tasks_Types (Task_Number)
 )
 go
 
@@ -131,17 +129,18 @@ go
 
 create table Customers_Rooms
 (
+	Bill_Number int NOT NULL,
 	Customer_ID int NOT NULL,
 	Room_Number int NOT NULL,
 	Entry_Date Date NOT NULL,
 	Exit_Date Date NOT NULL,
 	Amount_Of_People int NOT NULL,
-	Bill_Number int NOT NULL,
 	CONSTRAINT [PK_Customer_ID2] PRIMARY KEY (Customer_ID,Room_Number,Entry_Date),
 	CONSTRAINT [Fk_Room_Number] FOREIGN KEY 
     (Room_Number) REFERENCES Rooms (Room_Number)
 )
 go
+
 
 
 
@@ -163,6 +162,7 @@ go
 
 
 
+drop table Bill_Details
 create table Bill_Details
 (
 	Bill_Number int NOT NULL,
@@ -306,7 +306,7 @@ create proc GetCategory
 as
 	select * from [dbo].[Category]
 go
-exec GetCategory
+-- exec GetCategory
 
 
 create proc AddNewCategory
@@ -318,6 +318,16 @@ go
 --exec AddNewCategory 1,'sweet drink'
 --exec AddNewCategory 2,'Alcohol'
 --exec AddNewCategory 3,'Snacks'
+
+create proc AlterCategory
+@Category_Number int,
+@Description nvarchar(30)
+as
+	update [dbo].[Category]
+	set Description = @Description
+	where Category_Number = @Category_Number
+go
+-- exec AlterCategory 1,'Sweet Drink'
 
 
 
@@ -492,18 +502,25 @@ go
 
 
 create proc AddNewCustomerRooms
+@Bill_Number int,
 @Customer_ID int,
 @Room_Number int,
 @Entry_Date date,
 @Exit_Date date,
-@Amount_Of_People int,
-@Bill_Number int
+@Amount_Of_People int
 as
 	insert [dbo].[Customers_Rooms] 
-	values(@Customer_ID,@Room_Number,@Entry_Date,@Exit_Date,@Amount_Of_People,@Bill_Number)
+	values(@Bill_Number,@Customer_ID,@Room_Number,@Entry_Date,@Exit_Date,@Amount_Of_People)
 go
 
--- exec AddNewCustomerRooms 111,2,'05/06/2021','07/06/2021',1,1
+--exec AddNewCustomerRooms 1,111,2,'05/06/2021','07/06/2021',1
+--exec AddNewCustomerRooms 1,444	,3,	'2022-09-09',	'2022-09-15',	1
+--exec AddNewCustomerRooms 1,111,	3,	'2022-09-08',	'2022-09-14',	1
+--exec AddNewCustomerRooms 6,222,	5,	'2022-07-21',	'2022-07-25',	2
+--exec AddNewCustomerRooms 5,111,	6,	'2022-07-14',	'2022-07-20',	2
+--exec AddNewCustomerRooms 4,222,	10,	'2022-07-09',	'2022-07-11',	8
+--exec AddNewCustomerRooms 3,333,	7,	'2021-07-05',	'2021-07-08',	2
+--exec AddNewCustomerRooms 2,555,	9,	'2021-06-06',	'2021-06-12',	5
 
 
 create proc DeleteCustomerRoom
@@ -560,19 +577,6 @@ go
 
 
 
---  מביא את החדרים שכבר עשו צאק אווט או צריכים לעשות
--- drop proc GetAvailableRoomsByCurrentDate
---create proc GetAvailableRoomsByCurrentDate
---as
---	SELECT dbo.Rooms.Room_Number, dbo.Rooms.Room_Type, dbo.Rooms.Price_Per_Night, dbo.Customers_Rooms.Entry_Date, dbo.Customers_Rooms.Exit_Date
---	FROM dbo.Customers_Rooms INNER JOIN dbo.Rooms 
---	ON dbo.Customers_Rooms.Room_Number = dbo.Rooms.Room_Number
---	WHERE  (dbo.Customers_Rooms.Exit_Date < GETDATE())
---	GROUP BY dbo.Rooms.Room_Number, dbo.Rooms.Room_Type, dbo.Rooms.Price_Per_Night, dbo.Customers_Rooms.Entry_Date, dbo.Customers_Rooms.Exit_Date
---go
---  exec GetAvailableRoomsByCurrentDate
-
-
 --  תביא לי את כול החדרים הפנויים
 --  חדר פנוי  -->  חדר שתאריך היציאה שלו עבר כבר, חדר שלא מופיע ברשימה
 create proc AvailableRooms
@@ -590,6 +594,7 @@ go
 create proc GetAllBill
 as
 	select * from [dbo].[Bill]
+	order by [Bill_Status] desc
 go
 --exec GetAllBill
 
@@ -614,8 +619,10 @@ as
 	insert [dbo].[Bill] 
 	values(@Employee_ID, @Customer_ID,@Room_Number,@Credit_Card_Number,@Purchase_Date,@Bill_Status)
 go
-
 -- exec AddNewBill 111,111,1,'4580266514789456','01/01/2021','Open'
+--exec AddNewBill 333,222,2,'4580266514789456','12/09/2020','Close'
+--exec AddNewBill 444,555,3,'4580266514789456','23/09/2020','Close'
+
 
 
 create proc AlterBill
@@ -679,10 +686,10 @@ as
 	insert [dbo].[Bill_Details]
 	values (@Bill_Number, @Product_Code, @Amount,@Purchase_Date,@Purchase_Time)
 go
---exec AddNewBill_Detail 2,2,6,'12/12/2022','13:00'
---exec AddNewBill_Detail 2,3,6,'03/12/2022','16:00'
---exec AddNewBill_Detail 2,1,6,'12/12/2022','21:00'
---exec AddNewBill_Detail 2,1,10,'12/12/2022','21:00'
+--exec AddNewBill_Detail 1,2,6,'12/12/2022','13:00'
+--exec AddNewBill_Detail 4,3,6,'03/12/2022','16:00'
+--exec AddNewBill_Detail 7,1,6,'12/12/2022','21:00'
+--exec AddNewBill_Detail 7,1,10,'12/12/2022','21:00'
 
 
 create proc DeletBill_Detail
@@ -726,7 +733,7 @@ as
 	GROUP BY dbo.Bill_Details.Bill_Number, dbo.Bill_Details.Product_Code, dbo.Products.Description, dbo.Products.Price_Per_Unit, dbo.Products.Discount_Percentage, dbo.Bill_Details.Amount, dbo.Bill_Details.Purchase_Date, dbo.Bill_Details.Purchase_Time
 go
 
--- exec Product_Resit 2
+--exec Product_Resit 7
 
 
 -----------------------------------------
@@ -735,7 +742,7 @@ go
 ---------------------------------------------
 create proc Room_Resit
 as
-
+	
 
 go
 
@@ -766,4 +773,4 @@ create proc Month_with_the_most_reservation
 as
 	select MONTH(Entry_Date) as Month  from [dbo].[Customers_Rooms] GROUP by Entry_Date
 go
-exec Month_with_the_most_reservation
+--exec Month_with_the_most_reservation
