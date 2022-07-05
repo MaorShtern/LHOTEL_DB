@@ -348,7 +348,7 @@ go
 --exec AddNewProduct 1,'Coca cola',15,0
 --exec AddNewProduct 2,'Vodka',35,0
 --exec AddNewProduct 3,'Doritos',20,0
-
+--exec AddNewProduct 3,'Doritos',20,50
 
 
 create proc AlterProductById
@@ -363,7 +363,7 @@ as
 	[Discount_Percentage] = @Discount_Percentage
 	WHERE [Product_Code] = @id
 go
--- exec AlterProductById 1,'BBB',15,0
+-- exec AlterProductById 1,'Coca cola',15,50
 
 
 create proc DeleteProductById
@@ -741,33 +741,16 @@ go
 
 
 
-
-exec GetCategory
-exec GetAllProducts
-exec GetAllBill_Details
-
-
 create proc SumPerProduct
 as
-
-
-	SELECT dbo.Bill_Details.Product_Code, dbo.Products.Description, dbo.Category.Description AS Expr1, dbo.Products.Price_Per_Unit, dbo.Products.Discount_Percentage, dbo.Bill_Details.Amount
+	SELECT dbo.Bill_Details.Product_Code, dbo.Products.Description, dbo.Category.Description AS Category,
+	dbo.Products.Price_Per_Unit, dbo.Products.Discount_Percentage, 
+	(select sum(Amount) from Bill_Details where Product_Code = dbo.Bill_Details.Product_Code) as Amount
 	FROM dbo.Bill_Details INNER JOIN dbo.Products 
 	ON dbo.Bill_Details.Product_Code = dbo.Products.Product_Code INNER JOIN dbo.Category 
 	ON dbo.Products.Category_Number = dbo.Category.Category_Number
-	GROUP BY dbo.Bill_Details.Product_Code, dbo.Products.Description, dbo.Category.Description, dbo.Products.Price_Per_Unit, dbo.Products.Discount_Percentage, dbo.Bill_Details.Amount
+	GROUP BY dbo.Bill_Details.Product_Code, dbo.Products.Description, dbo.Category.Description, dbo.Products.Price_Per_Unit, dbo.Products.Discount_Percentage
 go
 
-select sum(Amount) from Bill_Details
-where Product_Code = 1
-
-
-
-SELECT dbo.Bill_Details.Product_Code, dbo.Products.Description, dbo.Category.Description AS Category, dbo.Products.Price_Per_Unit, dbo.Products.Discount_Percentage, dbo.Bill_Details.Amount
-FROM     dbo.Bill_Details INNER JOIN
-                  dbo.Products ON dbo.Bill_Details.Product_Code = dbo.Products.Product_Code INNER JOIN
-                  dbo.Category ON dbo.Products.Category_Number = dbo.Category.Category_Number
-GROUP BY dbo.Bill_Details.Product_Code, dbo.Products.Description, dbo.Category.Description, dbo.Products.Price_Per_Unit, dbo.Products.Discount_Percentage, dbo.Bill_Details.Amount
-
-
+-- exec SumPerProduct
 
