@@ -153,6 +153,7 @@ go
 
 
 
+<<<<<<< Updated upstream
 create table Bill_Details
 (
 	Bill_Number int NOT NULL,
@@ -166,6 +167,14 @@ create table Bill_Details
           (Bill_Number) REFERENCES Bill (Bill_Number),
 )
 go
+=======
+--declare @FromDate date = '12-06-2001'
+--declare @ToDate date = '12-06-2022'
+
+--select FORMAT(dateadd(day, 
+--               rand(checksum(newid()))*(1+datediff(day, @FromDate, @ToDate)), 
+--               @FromDate),'dd/MM/yyyy')
+>>>>>>> Stashed changes
 
 
 
@@ -389,6 +398,19 @@ as
 	select*from [dbo].[Employees_Tasks] ORDER BY [Task_Status] DESC
 go
 -- exec GetAllTasks
+
+
+
+SELECT Start_Date, count(Start_Date) 
+  FROM Employees_Tasks 
+ GROUP by Start_Date
+
+
+
+
+
+
+
 
 create proc GetTaskById
 @id int,
