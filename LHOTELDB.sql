@@ -786,6 +786,14 @@ go
 
 
 
+--SELECT dbo.Customers_Rooms.Bill_Number, dbo.Customers_Rooms.Entry_Date, dbo.Rooms.Room_Type,
+--(select count(Bill_Number) from Customers_Rooms where MONTH(Entry_Date) = MONTH(dbo.Customers_Rooms.Entry_Date)) as sfira
+--FROM     dbo.Customers_Rooms INNER JOIN
+ --                 dbo.Rooms ON dbo.Customers_Rooms.Room_Number = dbo.Rooms.Room_Number
+--GROUP BY dbo.Customers_Rooms.Bill_Number, dbo.Customers_Rooms.Entry_Date, dbo.Rooms.Room_Type
+
+
+
 
 
 
