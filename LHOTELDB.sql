@@ -903,8 +903,6 @@ as
 go
 
 -- exec Expenses
-=======
-
 
 --SELECT dbo.Customers_Rooms.Bill_Number, dbo.Customers_Rooms.Entry_Date, dbo.Rooms.Room_Type,
 --(select count(Bill_Number) from Customers_Rooms where MONTH(Entry_Date) = MONTH(dbo.Customers_Rooms.Entry_Date)) as sfira
@@ -912,14 +910,6 @@ go
  --                 dbo.Rooms ON dbo.Customers_Rooms.Room_Number = dbo.Rooms.Room_Number
 --GROUP BY dbo.Customers_Rooms.Bill_Number, dbo.Customers_Rooms.Entry_Date, dbo.Rooms.Room_Type
 
-
-
-
-
-
-
-
->>>>>>> 8b2c9a3b7ea50f35fc399a56e19083ed66097fdf
 
 
 
