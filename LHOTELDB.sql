@@ -367,7 +367,7 @@ go
 --exec GetProductById 111
 
 
-alter proc AddNewProduct
+create proc AddNewProduct
 @Category_Number int,
 @Description nvarchar(30) ,
 @Price_Per_Unit int ,
@@ -790,7 +790,6 @@ as
 	values (@Bill_Number, @Product_Code, @Amount,@Purchase_Date,@Purchase_Time)
 go
 
-
 --exec AddNewBill_Detail 1,2,6,'12/12/2022','13:00'
 --exec AddNewBill_Detail 4,3,6,'03/12/2022','16:00'
 --exec AddNewBill_Detail 3,1,6,'12/12/2022','21:00'
@@ -798,7 +797,7 @@ go
 --exec AddNewBill_Detail 6,5,2,'12/12/2022','21:00'
 --exec AddNewBill_Detail 3,1,3,'12/12/2022','21:00'
 --exec AddNewBill_Detail 3,6,1,'12/12/2022','21:00'
-
+--exec AddNewBill_Detail 6,5,2,'13/01/2022','21:00'
 
 
 create proc DeletBill_Detail
@@ -831,6 +830,20 @@ go
 -- exec AlterBill_Detail 2,2,6, '12/12/2022','13:00'
 
 
+create proc ProductPurchaseByCode
+@Product_Code int
+as
+	SELECT dbo.Bill_Details.Product_Code, dbo.Products.Description, dbo.Category.Description AS Category, dbo.Products.Price_Per_Unit, dbo.Products.Discount_Percentage, dbo.Bill_Details.Purchase_Date , sum(dbo.Bill_Details.Amount) as Amount
+	FROM     dbo.Bill_Details INNER JOIN dbo.Products 
+	ON dbo.Bill_Details.Product_Code = dbo.Products.Product_Code INNER JOIN dbo.Category 
+	ON dbo.Products.Category_Number = dbo.Category.Category_Number
+	WHERE  (dbo.Bill_Details.Product_Code = @Product_Code)
+	GROUP BY dbo.Bill_Details.Product_Code, dbo.Products.Description, dbo.Category.Description, dbo.Products.Price_Per_Unit, dbo.Products.Discount_Percentage, dbo.Bill_Details.Purchase_Date
+go
+
+-- exec ProductPurchaseByCode 5
+
+
 
 create proc Product_Resit
 @Bill_Number int
@@ -857,9 +870,9 @@ as
 	FROM dbo.Customers_Rooms INNER JOIN dbo.Bill 
 	ON dbo.Customers_Rooms.Bill_Number = dbo.Bill.Bill_Number INNER JOIN dbo.Rooms 
 	ON dbo.Customers_Rooms.Room_Number = dbo.Rooms.Room_Number
-WHERE  (dbo.Bill.Customer_ID = @ID)
-GROUP BY dbo.Customers_Rooms.Bill_Number, dbo.Bill.Customer_ID, dbo.Customers_Rooms.Room_Number, dbo.Rooms.Room_Type, dbo.Rooms.Price_Per_Night, dbo.Customers_Rooms.Entry_Date, dbo.Customers_Rooms.Exit_Date, dbo.Customers_Rooms.Amount_Of_People, dbo.Bill.Credit_Card_Number, dbo.Bill.Purchase_Date, dbo.Bill.Bill_Status
-order by dbo.Bill.Bill_Status desc
+	WHERE  (dbo.Bill.Customer_ID = @ID)
+	GROUP BY dbo.Customers_Rooms.Bill_Number, dbo.Bill.Customer_ID, dbo.Customers_Rooms.Room_Number, dbo.Rooms.Room_Type, dbo.Rooms.Price_Per_Night, dbo.Customers_Rooms.Entry_Date, dbo.Customers_Rooms.Exit_Date, dbo.Customers_Rooms.Amount_Of_People, dbo.Bill.Credit_Card_Number, dbo.Bill.Purchase_Date, dbo.Bill.Bill_Status
+	order by dbo.Bill.Bill_Status desc
 go
 
 -- exec Room_Resit 555
@@ -896,7 +909,6 @@ go
 --exec Month_with_the_most_reservation
 
 
-<<<<<<< HEAD
 create proc Expenses
 as
 	select sum([Sum_Total]) from [dbo].[Purchase_Of_Goods]
