@@ -71,6 +71,20 @@ create table Products
 go
 
 
+create table Purchase_Of_Goods
+(
+	Product_Code int not null,
+	Category_Number int not null,
+	Price_Per_Unit DECIMAL(10,2) NOT NULL,
+	Amount int NOT NULL,
+	Purchase_Date Date NOT NULL,
+	Sum_Total DECIMAL(10,2) NOT NULL,
+	CONSTRAINT [Fk_Purchase_Of_Goods] FOREIGN KEY (Product_Code) REFERENCES Products (Product_Code),
+	CONSTRAINT [Fk_Category_Number1] FOREIGN KEY (Category_Number) REFERENCES Category (Category_Number)
+)
+go
+
+
 
 create table Employees
 (
@@ -128,16 +142,15 @@ create table Bill
 	Bill_Number int identity(1,1) NOT NULL,
 	Employee_ID int NOT NULL,
 	Customer_ID int NOT NULL,
-	Room_Number int NOT NULL,
 	Credit_Card_Number nvarchar(12) NOT NULL,
 	Purchase_Date Date NOT NULL,
 	Bill_Status nvarchar(30) NOT NULL,
 	CONSTRAINT [PK_Bill_Number1] PRIMARY KEY (Bill_Number),
 	CONSTRAINT [Fk_Employee_ID2] FOREIGN KEY (Employee_ID) REFERENCES Employees (Employee_ID),
-	CONSTRAINT [Fk_Customer_ID] FOREIGN KEY (Customer_ID) REFERENCES Customers (Customer_ID),
-	CONSTRAINT [Fk_Room_Number1] FOREIGN KEY (Room_Number) REFERENCES [dbo].[Rooms] ([Room_Number])
+	CONSTRAINT [Fk_Customer_ID] FOREIGN KEY (Customer_ID) REFERENCES Customers (Customer_ID)
 )
 go
+
 
 
 create table Bill_Details
@@ -155,17 +168,18 @@ create table Bill_Details
 go
 
 
+
 create table Customers_Rooms
 (
+	Room_Number int NOT NULL,
 	Bill_Number int NOT NULL,
 	Customer_ID int NOT NULL,
-	Room_Number int NOT NULL,
 	Entry_Date Date NOT NULL,
 	Exit_Date Date NOT NULL,
 	Amount_Of_People int NOT NULL,
-	CONSTRAINT [PK_Customer_ID2] PRIMARY KEY (Customer_ID,Room_Number,Entry_Date),
+	CONSTRAINT [PK_Room_Number2] PRIMARY KEY (Room_Number),
 	CONSTRAINT [Fk_Room_Number] FOREIGN KEY (Room_Number) REFERENCES Rooms (Room_Number),
-	CONSTRAINT [Fk_Bill_Number3] FOREIGN KEY (Bill_Number) REFERENCES Bill (Bill_Number)
+	CONSTRAINT [Fk_Bill_Number3] FOREIGN KEY (Bill_Number) REFERENCES Bill (Bill_Number),
 )
 go
 
@@ -229,11 +243,18 @@ go
 
 
 -- פרוצדורות לקוחות
+
+select * from [dbo].[Customers_Types]
+--1	Common
+--2	Regular
+--3	VIP
+
 create proc GetAllCustomers
 as
 	select * from [dbo].[Customers]
 go
 --exec GetAllCustomers
+
 
 
 create proc GetCustomerById 
@@ -258,7 +279,13 @@ as
 	insert [dbo].[Customers] values (@id ,@Customer_Type,@First_Name,@Last_Name,@Mail,@Phone_Number
 	,@Card_Holder_Name,@Credit_Card_Date,@Three_Digit)
 go
---exec AddNewCustomer 111,1,'AAA','BBB','CCC','0526211881','AAA','02/02/2025',569
+----exec AddNewCustomer 111,1,'AAA','BBB','CCC','0526211881','AAA','02/02/2025',569
+--111	1	aaa	aaa	aaa@gmail.com	0526211881	aaa	2025-02-02	569
+--222	1	bbb	bbb	bbb@gmail.com	0524987762	bbb	2025-03-03	788
+--333	2	ccc	ccc	ccc@gmail.com	0501264859	ccc	2025-05-04	954
+--444	2	eee	eee	eee@gmail.com	0541528971	eee	2025-04-04	781
+--555	3	fff	fff	fff@gmail.com	0526487912	fff	2025-05-05	212
+
 
 create proc AlterCustomerById
 @id int,
@@ -380,6 +407,79 @@ go
 -- exec DeleteProductById 2
 
 
+
+---  פרוצדורות רכישות הספקה
+create proc GetAllPurchase_Of_Goods
+as
+	select * from [dbo].[Purchase_Of_Goods]
+	order by [Purchase_Date] desc
+go
+
+-- exec GetAllPurchase_Of_Goods
+
+
+create proc GetPurchase_Of_Goods_ByCode
+@Code int
+as
+	select * from [dbo].[Purchase_Of_Goods]
+	where [Product_Code] = @Code
+	order by [Purchase_Date] desc
+go
+
+-- exec GetPurchase_Of_Goods_ByCode 1 
+
+
+create proc AddNewPurchase_Of_Goods
+@Product_Code int,
+@Category_Number int,
+@Price_Per_Unit decimal(10,2),
+@Amount int,
+@Purchase_Date date
+as
+	declare @Sum_Total as decimal(10,2) = @Price_Per_Unit * @Amount
+	insert [dbo].[Purchase_Of_Goods] 
+	values(@Product_Code , @Category_Number , @Price_Per_Unit , @Amount, @Purchase_Date , @Sum_Total)
+go
+
+--exec AddNewPurchase_Of_Goods 1,1,7.5,100,'07/07/2022'
+--exec AddNewPurchase_Of_Goods 2,2,25,230,'07/07/2022'
+--exec AddNewPurchase_Of_Goods 3,3,10,300,'07/07/2022'
+--exec AddNewPurchase_Of_Goods 4,3,15,50,'07/07/2022'
+--exec AddNewPurchase_Of_Goods 5,1,9,76,'07/07/2022'
+--exec AddNewPurchase_Of_Goods 6,2,30,89,'07/07/2022'
+--exec AddNewPurchase_Of_Goods 7,3,10,191,'07/07/2022'
+
+
+
+create proc AlterPurchase_Of_Goods
+@Product_Code int,
+@Category_Number int,
+@Price_Per_Unit decimal(10,2),
+@Amount int,
+@Purchase_Date date
+as
+	declare @Sum_Total as decimal(10,2) = @Price_Per_Unit * @Amount
+	update [dbo].[Purchase_Of_Goods]
+	set [Product_Code] = @Product_Code , [Category_Number] = @Category_Number , [Price_Per_Unit] = @Price_Per_Unit,
+	[Amount] = @Amount , [Purchase_Date] = @Purchase_Date, [Sum_Total] = @Sum_Total
+	where [Product_Code] = @Product_Code
+go
+
+--exec AlterPurchase_Of_Goods 1,1,8,200,'07/07/2022'
+
+
+create proc DeletePurchase_Of_Goods
+@Product_Code int,
+@Purchase_Date date
+as
+	delete from [dbo].[Purchase_Of_Goods] 
+	where [Product_Code] = @Product_Code and [Purchase_Date] = @Purchase_Date
+go
+
+--exec DeletePurchase_Of_Goods 1 ,'07/07/2022'
+
+
+
 --  פרוצדורות חדרים 
 create proc GetAllRooms
 as
@@ -498,24 +598,26 @@ go
 
 
 create proc AddNewCustomerRooms
+@Room_Number int,
 @Bill_Number int,
 @Customer_ID int,
-@Room_Number int,
 @Entry_Date date,
 @Exit_Date date,
 @Amount_Of_People int
 as
 	insert [dbo].[Customers_Rooms] 
-	values(@Bill_Number,@Customer_ID,@Room_Number,@Entry_Date,@Exit_Date,@Amount_Of_People)
+	values(@Room_Number,@Bill_Number,@Customer_ID,@Entry_Date,@Exit_Date,@Amount_Of_People)
 go
 
---exec AddNewCustomerRooms 1,444	,3,	'2022-09-09',	'2022-09-15',	1
---exec AddNewCustomerRooms 5,111,	3,	'2022-09-08',	'2022-09-14',	1
---exec AddNewCustomerRooms 8,222,	5,	'2022-07-21',	'2022-07-25',	2
---exec AddNewCustomerRooms 2,111,	6,	'2022-07-14',	'2022-07-20',	2
---exec AddNewCustomerRooms 4,222,	10,	'2022-07-09',	'2022-07-11',	8
---exec AddNewCustomerRooms 8,333,	7,	'2021-07-05',	'2021-07-08',	2
---exec AddNewCustomerRooms 8,555,	9,	'2021-06-06',	'2021-06-12',	5
+--exec AddNewCustomerRooms 1,1,111,'2022-09-09','2022-09-15',1
+--exec AddNewCustomerRooms 2,2,222,'2022-09-08','2022-09-14',2
+--exec AddNewCustomerRooms 3,3,333,'2022-07-21','2022-07-25',2
+--exec AddNewCustomerRooms 8,4,444,'2022-07-14','2022-07-20',8
+--exec AddNewCustomerRooms 9,5,555,'2021-07-05','2021-07-08',2
+--exec AddNewCustomerRooms 7,6,666,'2021-06-06','2021-06-12',4
+--exec AddNewCustomerRooms 6,3,333,'2022-07-21','2022-07-25',3
+
+
 
 
 create proc DeleteCustomerRoom
@@ -605,21 +707,20 @@ go
 create proc AddNewBill
 @Employee_ID int,
 @Customer_ID int,
-@Room_Number int,
 @Credit_Card_Number nvarchar(12),
 @Purchase_Date date,
 @Bill_Status nvarchar(30)
 as
 	insert [dbo].[Bill] 
-	values(@Employee_ID, @Customer_ID,@Room_Number,@Credit_Card_Number,@Purchase_Date,@Bill_Status)
+	values(@Employee_ID, @Customer_ID,@Credit_Card_Number,@Purchase_Date,@Bill_Status)
 go
 
---exec AddNewBill 111,111,1,'4580266514789456','01/01/2021','Open'
---exec AddNewBill 222,222,2,'4580266514789456','01/01/2021','Open'
---exec AddNewBill 333,333,3,'4580266514789456','01/01/2021','Open'
---exec AddNewBill 444,444,4,'4580266514789456','01/01/2021','Open'
---exec AddNewBill 555,555,5,'4580266514789456','12/09/2020','Close'
---exec AddNewBill 666,444,9,'4580266514789456','23/09/2020','Close'
+--exec AddNewBill 111,111,'4580266514789456','01/01/2021','Open'
+--exec AddNewBill 222,222,'4580266514789456','01/01/2021','Open'
+--exec AddNewBill 333,333,'4580266514789456','01/01/2021','Open'
+--exec AddNewBill 444,444,'4580266514789456','01/01/2021','Open'
+--exec AddNewBill 555,555,'4580266514789456','12/09/2020','Close'
+--exec AddNewBill 666,444,'4580266514789456','23/09/2020','Close'
 
 
 
@@ -689,13 +790,15 @@ as
 	values (@Bill_Number, @Product_Code, @Amount,@Purchase_Date,@Purchase_Time)
 go
 
+
 --exec AddNewBill_Detail 1,2,6,'12/12/2022','13:00'
 --exec AddNewBill_Detail 4,3,6,'03/12/2022','16:00'
 --exec AddNewBill_Detail 3,1,6,'12/12/2022','21:00'
 --exec AddNewBill_Detail 5,1,10,'12/12/2022','21:00'
---exec AddNewBill_Detail 8,5,2,'12/12/2022','21:00'
+--exec AddNewBill_Detail 6,5,2,'12/12/2022','21:00'
 --exec AddNewBill_Detail 3,1,3,'12/12/2022','21:00'
 --exec AddNewBill_Detail 3,6,1,'12/12/2022','21:00'
+
 
 
 create proc DeletBill_Detail
@@ -742,17 +845,26 @@ go
 --exec Product_Resit 3
 
 
------------------------------------------
---  צריך לשנות את הטבלאות BILL, ROOM_CUS
---  אנחנו נירצה ליצור קבלה המראה את פרטי החדר, כמה ימים ישנו שם ,כמה אנשים ישנו שם, וכמה צריך לשלם
----------------------------------------------
 create proc Room_Resit
+@ID int
 as
-	
-
+	SELECT dbo.Customers_Rooms.Bill_Number, dbo.Bill.Customer_ID, dbo.Customers_Rooms.Room_Number, 
+	dbo.Rooms.Room_Type, dbo.Rooms.Price_Per_Night, dbo.Customers_Rooms.Entry_Date,dbo.Customers_Rooms.Exit_Date,
+	(SELECT DATEDIFF(day, dbo.Customers_Rooms.Entry_Date, dbo.Customers_Rooms.Exit_Date)) as Number_Of_Nights,
+	dbo.Customers_Rooms.Amount_Of_People, 
+	(SELECT DATEDIFF(day, dbo.Customers_Rooms.Entry_Date, dbo.Customers_Rooms.Exit_Date) * dbo.Rooms.Price_Per_Night) as Sum_Total,
+	dbo.Bill.Credit_Card_Number, dbo.Bill.Purchase_Date,dbo.Bill.Bill_Status
+	FROM dbo.Customers_Rooms INNER JOIN dbo.Bill 
+	ON dbo.Customers_Rooms.Bill_Number = dbo.Bill.Bill_Number INNER JOIN dbo.Rooms 
+	ON dbo.Customers_Rooms.Room_Number = dbo.Rooms.Room_Number
+WHERE  (dbo.Bill.Customer_ID = @ID)
+GROUP BY dbo.Customers_Rooms.Bill_Number, dbo.Bill.Customer_ID, dbo.Customers_Rooms.Room_Number, dbo.Rooms.Room_Type, dbo.Rooms.Price_Per_Night, dbo.Customers_Rooms.Entry_Date, dbo.Customers_Rooms.Exit_Date, dbo.Customers_Rooms.Amount_Of_People, dbo.Bill.Credit_Card_Number, dbo.Bill.Purchase_Date, dbo.Bill.Bill_Status
+order by dbo.Bill.Bill_Status desc
 go
 
--- exec Room_Resit
+-- exec Room_Resit 555
+
+--SELECT DATEDIFF(day, '28/06/2022', '07/07/2022') AS DateDiff;
 
 
 
@@ -784,13 +896,12 @@ go
 --exec Month_with_the_most_reservation
 
 
+create proc Expenses
+as
+	select sum([Sum_Total]) from [dbo].[Purchase_Of_Goods]
+go
 
-
-
-
-
-
-
+-- exec Expenses
 
 
 
