@@ -63,12 +63,13 @@ create table Products
 	Product_Code int identity(1,1),
 	Category_Number int not null,
 	Description NVARCHAR(30),
-	Price_Per_Unit int NOT NULL,
-	Discount_Percentage int NOT NULL,
+	Price_Per_Unit DECIMAL(10,2) NOT NULL,
+	Discount_Percentage DECIMAL(10,2) NOT NULL,
 	CONSTRAINT [PK_Product_Code] PRIMARY KEY (Product_Code),
 	CONSTRAINT [Fk_Category_Number] FOREIGN KEY (Category_Number) REFERENCES Category (Category_Number)
 )
 go
+
 
 
 create table Purchase_Of_Goods
@@ -916,13 +917,34 @@ go
 
 -- exec Expenses
 
+
+create proc Calu_Rooms_Income
+as
+	SELECT ((SELECT DATEDIFF(day, dbo.Customers_Rooms.Entry_Date,  dbo.Customers_Rooms.Exit_Date)) * dbo.Rooms.Price_Per_Night) AS Sum_Total
+	FROM dbo.Customers_Rooms INNER JOIN dbo.Rooms 
+	ON dbo.Customers_Rooms.Room_Number = dbo.Rooms.Room_Number
+go
+
+exec Calu_Rooms_Income
+
+
 --SELECT dbo.Customers_Rooms.Bill_Number, dbo.Customers_Rooms.Entry_Date, dbo.Rooms.Room_Type,
 --(select count(Bill_Number) from Customers_Rooms where MONTH(Entry_Date) = MONTH(dbo.Customers_Rooms.Entry_Date)) as sfira
 --FROM     dbo.Customers_Rooms INNER JOIN
- --                 dbo.Rooms ON dbo.Customers_Rooms.Room_Number = dbo.Rooms.Room_Number
+--                  dbo.Rooms ON dbo.Customers_Rooms.Room_Number = dbo.Rooms.Room_Number
 --GROUP BY dbo.Customers_Rooms.Bill_Number, dbo.Customers_Rooms.Entry_Date, dbo.Rooms.Room_Type
 
 
+exec GetAllBill_Details
 
+create proc Calu_Products_Income
+as
+	SELECT dbo.Bill_Details.Amount, dbo.Products.Price_Per_Unit, dbo.Products.Discount_Percentage
+	FROM     dbo.Bill_Details INNER JOIN
+					  dbo.Products ON dbo.Bill_Details.Product_Code = dbo.Products.Product_Code
+	GROUP BY dbo.Bill_Details.Amount, dbo.Products.Price_Per_Unit, dbo.Products.Discount_Percentage
+go
+
+--exec Calu_Products_Income
 
 
