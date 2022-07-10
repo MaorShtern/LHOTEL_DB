@@ -831,18 +831,18 @@ go
 -- exec AlterBill_Detail 2,2,6, '12/12/2022','13:00'
 
 
-alter proc ProductPurchaseByCode
-@Product_Code int
+create proc ProductPurchaseByName
+@Description nvarchar(30)
 as
 	SELECT dbo.Bill_Details.Product_Code, dbo.Products.Description, dbo.Category.Description AS Category, dbo.Products.Price_Per_Unit, dbo.Products.Discount_Percentage, sum(dbo.Bill_Details.Amount) as Amount
 	FROM     dbo.Bill_Details INNER JOIN dbo.Products 
 	ON dbo.Bill_Details.Product_Code = dbo.Products.Product_Code INNER JOIN dbo.Category 
 	ON dbo.Products.Category_Number = dbo.Category.Category_Number
-	WHERE  (dbo.Bill_Details.Product_Code = @Product_Code)
+	WHERE  (dbo.Products.Description = @Description)
 	GROUP BY dbo.Bill_Details.Product_Code, dbo.Products.Description, dbo.Category.Description, dbo.Products.Price_Per_Unit, dbo.Products.Discount_Percentage
 go
-
--- exec ProductPurchaseByCode 5
+exec GetAllProducts
+-- exec ProductPurchaseByName 'Coca cola'
 
 
 
@@ -946,5 +946,3 @@ go
 
 --exec Calu_Products_Income
 
-45 + 25.5 + 22.5 + 45 + 120 + 
-7.5
